@@ -1,0 +1,5 @@
+const CACHE='bmpr-app-v1.1.0';
+const ASSETS=['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./icons/lambang-sulteng.png','./icons/icon.svg','./icons/icon-192.png','./icons/icon-512.png'];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)))});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('bmpr-app-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
+self.addEventListener('fetch',event=>{let req=event.request,url=new URL(req.url);if(req.method!=='GET'||url.origin!==self.location.origin)return;event.respondWith((async()=>{const cache=await caches.open(CACHE);if(req.mode==='navigate'){try{const net=await fetch(req);if(net.ok)cache.put(req,net.clone());return net}catch{return(await cache.match(req))||(await cache.match('./index.html'))||Response.error()}}const cached=await cache.match(req);if(cached)return cached;try{const net=await fetch(req);if(net.ok)cache.put(req,net.clone());return net}catch{return Response.error()}})())});
